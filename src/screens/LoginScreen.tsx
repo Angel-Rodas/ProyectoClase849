@@ -35,7 +35,8 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   const handleGoogleLogin = async () => {
-    // La URL de retorno usa el scheme de la app (miapmovil://) definido en app.json.
+    // En Expo Go la URL de retorno es exp://<ip>:8081/--/ y debe estar registrada en
+    // la lista de Redirect URLs de Supabase, o Supabase regresa a su Site URL.
     const redirectTo = Linking.createURL('/');
 
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -55,10 +56,16 @@ export default function LoginScreen({ navigation }: any) {
       return;
     }
 
-    // En el flujo PKCE, Supabase regresa un "code" que se canjea por la sesion.
-    const { queryParams } = Linking.parse(result.url);
-    const code = queryParams?.code as string | undefined;
+    // Supabase regresa el code en el query (flujo PKCE); si hubo un problema lo informa
+    // mediante error_description.
+    const parsed = Linking.parse(result.url);
+    const errorDescription = parsed.queryParams?.error_description as string | undefined;
+    if (errorDescription) {
+      Alert.alert('Error', errorDescription);
+      return;
+    }
 
+    const code = parsed.queryParams?.code as string | undefined;
     if (code) {
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       if (exchangeError) {
