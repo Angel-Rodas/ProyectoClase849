@@ -4,6 +4,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { supabase } from '../../lib/supabase';
 
 export default function RegisterScreen({ navigation }: any) {
   const [name, setName] = useState('');
@@ -18,7 +19,25 @@ export default function RegisterScreen({ navigation }: any) {
       return;
     }
 
-    // El registro contra Supabase se conecta en la siguiente actividad.
+    // Registro contra Supabase Auth con correo y contrasena. Los datos extra
+    // (nombre y telefono) se guardan en la metadata del usuario.
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: { full_name: name.trim(), phone_number: phoneNumber.trim() },
+      },
+    });
+
+    if (error) {
+      Alert.alert('Error', error.message);
+      return;
+    }
+
+    if (data.user) {
+      Alert.alert('Registro exitoso', 'Tu cuenta fue creada. Ahora inicia sesion.');
+      navigation.navigate('Login');
+    }
   };
 
   return (
