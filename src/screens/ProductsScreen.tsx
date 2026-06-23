@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
 import CustomInput from '../components/CustomInput';
@@ -18,6 +18,23 @@ export default function ProductsScreen() {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
+
+  // Endpoint Get: al montar la pantalla se cargan los productos desde Supabase
+  // ordenados por fecha de creacion, de modo que persisten entre recargas.
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setProducts(data as Product[]);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleAddProduct = async () => {
     if (!name.trim() || !brand.trim()) {
