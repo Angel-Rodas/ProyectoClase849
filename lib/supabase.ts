@@ -23,6 +23,9 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      // PKCE es el flujo recomendado para apps moviles: el SSO con Google
+      // regresa un "code" en el redireccion que luego se canjea por la sesion.
+      flowType: 'pkce',
     },
   }
 );
